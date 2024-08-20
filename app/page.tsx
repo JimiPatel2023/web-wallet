@@ -20,11 +20,12 @@ const Wallets = () => {
 	useEffect(() => {
 		const mnemonic1 = localStorage.getItem("mnemonic");
 		console.log(mnemonic);
-		if (!mnemonic) {
+		if (!mnemonic1) {
 			const mnemonic2 = generate_mnemonic_phrase();
 			localStorage.setItem("mnemonic", generate_mnemonic_phrase());
 			setMnemonic(mnemonic2);
 		}
+		setMnemonic(mnemonic1)
 		const number_of_wallets = localStorage.getItem("number_of_wallets");
 		if(number_of_wallets === null) {
 			localStorage.setItem("number_of_wallets", "0");
@@ -71,7 +72,7 @@ const Wallets = () => {
 		<>
 			{mnemonic && (
 				<>
-					<div className="mx-auto p-6 bg-whites">
+					<div className="mx-auto p-6 bg-white">
 						<h1 className="text-3xl font-semibold mb-6 text-gray-900">Your Mnemonic Phrase</h1>
 						<RevealMnemonic mnemonic={mnemonic} />
 						<div className="flex gap-4 mt-2">
