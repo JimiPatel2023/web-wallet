@@ -33,7 +33,7 @@ const Wallets = () => {
 		} else {
 			set_number_of_wallets(+number_of_wallets)
 		}
-	}, [router, mnemonic]);
+	}, [router]);
 
 	useEffect(() => {
 		if(mnemonic) {
