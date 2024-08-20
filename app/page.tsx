@@ -1,113 +1,139 @@
-import Image from "next/image";
+"use client";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import Spinner from "@/components/Spinner";
+import { generate_mnemonic_phrase, get_wallets_from_mnemonic } from "@/utils/utils";
+import RevealMnemonic from "@/components/RevealMnemonic";
+import { Button } from "@/components/ui/button";
+import { Clipboard, Plus, GitHub } from "react-feather";
+import { Wallet } from "lucide-react";
+import { useToast } from "@/components/ui/use-toast";
+import WalletInfoCard from "@/components/WalletInfoCard";
 
-export default function Home() {
-  return (
-    <main className="flex min-h-screen flex-col items-center justify-between p-24">
-      <div className="z-10 w-full max-w-5xl items-center justify-between font-mono text-sm lg:flex">
-        <p className="fixed left-0 top-0 flex w-full justify-center border-b border-gray-300 bg-gradient-to-b from-zinc-200 pb-6 pt-8 backdrop-blur-2xl dark:border-neutral-800 dark:bg-zinc-800/30 dark:from-inherit lg:static lg:w-auto  lg:rounded-xl lg:border lg:bg-gray-200 lg:p-4 lg:dark:bg-zinc-800/30">
-          Get started by editing&nbsp;
-          <code className="font-mono font-bold">app/page.tsx</code>
-        </p>
-        <div className="fixed bottom-0 left-0 flex h-48 w-full items-end justify-center bg-gradient-to-t from-white via-white dark:from-black dark:via-black lg:static lg:size-auto lg:bg-none">
-          <a
-            className="pointer-events-none flex place-items-center gap-2 p-8 lg:pointer-events-auto lg:p-0"
-            href="https://vercel.com?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            By{" "}
-            <Image
-              src="/vercel.svg"
-              alt="Vercel Logo"
-              className="dark:invert"
-              width={100}
-              height={24}
-              priority
-            />
-          </a>
-        </div>
-      </div>
+const Wallets = () => {
+	const router = useRouter();
+	const [mnemonic, setMnemonic] = useState<string | null>(null);
+	const [number_of_wallets, set_number_of_wallets] = useState<number>(0)
+	const [wallets, setWallets] = useState<{ public_key:string, private_key:string }[] | null>([]);
+	const { toast } = useToast();
 
-      <div className="relative z-[-1] flex place-items-center before:absolute before:h-[300px] before:w-full before:-translate-x-1/2 before:rounded-full before:bg-gradient-radial before:from-white before:to-transparent before:blur-2xl before:content-[''] after:absolute after:-z-20 after:h-[180px] after:w-full after:translate-x-1/3 after:bg-gradient-conic after:from-sky-200 after:via-blue-200 after:blur-2xl after:content-[''] before:dark:bg-gradient-to-br before:dark:from-transparent before:dark:to-blue-700 before:dark:opacity-10 after:dark:from-sky-900 after:dark:via-[#0141ff] after:dark:opacity-40 sm:before:w-[480px] sm:after:w-[240px] before:lg:h-[360px]">
-        <Image
-          className="relative dark:drop-shadow-[0_0_0.3rem_#ffffff70] dark:invert"
-          src="/next.svg"
-          alt="Next.js Logo"
-          width={180}
-          height={37}
-          priority
-        />
-      </div>
+	useEffect(() => {
+		const mnemonic1 = localStorage.getItem("mnemonic");
+		console.log(mnemonic);
+		if (!mnemonic) {
+			const mnemonic2 = generate_mnemonic_phrase();
+			localStorage.setItem("mnemonic", generate_mnemonic_phrase());
+			setMnemonic(mnemonic2);
+		}
+		const number_of_wallets = localStorage.getItem("number_of_wallets");
+		if(number_of_wallets === null) {
+			localStorage.setItem("number_of_wallets", "0");
+		} else {
+			set_number_of_wallets(+number_of_wallets)
+		}
+	}, [router]);
 
-      <div className="mb-32 grid text-center lg:mb-0 lg:w-full lg:max-w-5xl lg:grid-cols-4 lg:text-left">
-        <a
-          href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className="mb-3 text-2xl font-semibold">
-            Docs{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className="m-0 max-w-[30ch] text-sm opacity-50">
-            Find in-depth information about Next.js features and API.
-          </p>
-        </a>
+	useEffect(() => {
+		if(mnemonic) {
+			const wallets = get_wallets_from_mnemonic(mnemonic, number_of_wallets);
+			setWallets(wallets);
+		}
+	}, [number_of_wallets, mnemonic])
 
-        <a
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className="mb-3 text-2xl font-semibold">
-            Learn{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className="m-0 max-w-[30ch] text-sm opacity-50">
-            Learn about Next.js in an interactive course with&nbsp;quizzes!
-          </p>
-        </a>
+	const handleCopy = (mnemonic: string) => {
+		navigator.clipboard.writeText(mnemonic);
+		toast({
+			title: "Mnemonic copied to clipboard!",
+		});
+	};
 
-        <a
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className="mb-3 text-2xl font-semibold">
-            Templates{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className="m-0 max-w-[30ch] text-sm opacity-50">
-            Explore starter templates for Next.js.
-          </p>
-        </a>
+	const onCreateWallet = () => {
+		set_number_of_wallets(val => val + 1);
+		localStorage.setItem("number_of_wallets", `${number_of_wallets+1}`);
+		toast({
+			title: "New Wallet created!",
+		});
+	};
 
-        <a
-          href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className="mb-3 text-2xl font-semibold">
-            Deploy{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className="m-0 max-w-[30ch] text-balance text-sm opacity-50">
-            Instantly deploy your Next.js site to a shareable URL with Vercel.
-          </p>
-        </a>
-      </div>
-    </main>
-  );
-}
+	const updateMnemonic = () => {
+		const new_phrase = generate_mnemonic_phrase();
+		localStorage.setItem("mnemonic", new_phrase);
+		localStorage.setItem("number_of_wallets", "0");
+		setMnemonic(new_phrase);
+		setWallets([]);
+		set_number_of_wallets(0)	
+		toast({
+			title: "New Mnemonic created!",
+		});
+	}
+
+	return (
+		<>
+			{mnemonic && (
+				<>
+					<div className="mx-auto p-6 bg-whites">
+						<h1 className="text-3xl font-semibold mb-6 text-gray-900">Your Mnemonic Phrase</h1>
+						<RevealMnemonic mnemonic={mnemonic} />
+						<div className="flex gap-4 mt-2">
+							<Button
+								onClick={(e) => {
+									handleCopy(mnemonic);
+								}}
+								className="flex-1 bg-blue-500 text-white hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400 rounded-lg py-2">
+								<Clipboard size={20} className="mr-2" />
+								Copy Phrase
+							</Button>
+							<Button
+								onClick={(e) => {
+									onCreateWallet();
+								}}
+								className="flex-1 bg-green-500 text-white hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-400 rounded-lg py-2">
+								<Wallet size={20} className="mr-2" />
+								Create Wallet
+							</Button>
+						</div>
+						<div className="flex gap-2 mt-2 flex-wrap">
+						<Button
+								onClick={(e) => {
+									updateMnemonic();
+								}}
+								className="flex-1 bg-red-500 text-white hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-400 rounded-lg py-2">
+								<Plus size={20} className="mr-2" />
+								Create New mnemonic
+						</Button>
+						<div className="flex gap-2 w-full">
+							<a href="https://github.com/JimiPatel2023/web-wallet" target="_blank" className="w-full">
+							<Button
+								className="flex-1 bg-black text-white hover:bg-black focus:outline-none focus:ring-2 focus:ring-black rounded-lg py-2 w-full">
+								<GitHub size={20} className="mr-2" />
+								GitHub Code
+						</Button>
+							</a>
+							<a href="https://github.com/JimiPatel2023" target="_blank" className="w-full">
+							<Button
+								className="flex-1 bg-black text-white hover:bg-black focus:outline-none focus:ring-2 focus:ring-black rounded-lg py-2 w-full">
+								<GitHub size={20} className="mr-2" />
+								Profile
+						</Button>
+							</a>
+						</div>
+						</div>
+						{
+							wallets && wallets.length > 0 && (
+								wallets.map((val, index) => {
+									return (
+										<div key={val.public_key} className="my-4">
+											<WalletInfoCard publicKey={val.public_key} privateKey={val.private_key} walletName={`Wallet ${index + 1}`} />
+										</div>
+									)
+								})
+							)
+						}
+					</div>
+				</>
+			)}
+		</>
+	);
+};
+
+export default Wallets;
