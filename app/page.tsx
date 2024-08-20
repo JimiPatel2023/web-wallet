@@ -22,7 +22,7 @@ const Wallets = () => {
 		console.log(mnemonic);
 		if (!mnemonic1) {
 			const mnemonic2 = generate_mnemonic_phrase();
-			localStorage.setItem("mnemonic", generate_mnemonic_phrase());
+			localStorage.setItem("mnemonic", mnemonic2);
 			setMnemonic(mnemonic2);
 		} else {
 			setMnemonic(mnemonic1)
